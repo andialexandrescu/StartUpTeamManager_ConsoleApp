@@ -114,9 +114,11 @@ public class TeamBuilderImpl implements TeamBuilderInterface
             if(team_member.checkSchedule(project.getDeadline()))
             {
                 team_member.addSchedule(project.getDeadline());
-                project.addMember(team_member);
+                // won't use project.addMember(team_member); since I don't want any other user to be able to call this previous method since the service class is the layer that should be used instead with the method addTeamMember
+                // addTeamMember
+                project.getMembers().add(team_member);
                 System.out.println("Team member is available for the project time frame");
-                System.out.println("Team member " + team_member.getName() + " has been added to the project " + project.getTitle());
+                System.out.println("Team member " + team_member.getName() + " has been added to the project " + project.getTitle() + " successfully");
             } else
             {
                 throw new IllegalArgumentException("Team member is not available for the project time frame");
@@ -172,7 +174,9 @@ public class TeamBuilderImpl implements TeamBuilderInterface
             throw new IllegalArgumentException("Team member and roles cannot be null");
         }
         team_member.removeRole(prev_role);
+        System.out.println("Previous role removed successfully");
         team_member.addRole(updated_role);
+        System.out.println("Updated role added successfully");
     }
 
     @Override
@@ -182,14 +186,15 @@ public class TeamBuilderImpl implements TeamBuilderInterface
         {
             throw new IllegalArgumentException("Team member cannot be null");
         }
-        project.removeMember(team_member);
+        project.getMembers().remove(team_member);
+        System.out.println("Team member removed from project successfully");
     }
 
     public static void main(String[] args) // acts as a testing environment for basic procedures
     {
         TeamManager head_manager = new TeamManager("Steve", "steve.professional@inspire.solve.outlook.com", 25000, LocalDate.of(2016, 5, 14));
         head_manager.addRole(Role.DataAnalyst);
-        Project product_deduplication = new Project("Product deduplication software", head_manager, new SchedulePair(LocalDate.of(2025, 3, 12), LocalDate.of(2025, 9, 27)));
+        Project product_deduplication = new Project("Product deduplication", head_manager, new SchedulePair(LocalDate.of(2025, 3, 12), LocalDate.of(2025, 9, 27)));
         product_deduplication.addTechRequirement(TechStack.Python, 3);
         product_deduplication.addTechRequirement(TechStack.Cassandra, 2);
         product_deduplication.addTechRequirement(TechStack.ASPDotNET, 2);
@@ -217,6 +222,11 @@ public class TeamBuilderImpl implements TeamBuilderInterface
 
         System.out.println("\n\t---------------Before adding members formation:---------------");
         team_builder.displayVacantPositions(product_deduplication);
+        System.out.println("\n\t------Before sorting tech requirements:------");
+        product_deduplication.display();
+        product_deduplication.sortTechRequirements();
+        System.out.println("\n\t------After sorting tech requirements:------");
+        product_deduplication.display();
 
         System.out.println("\n\t---------------Adding members logic:---------------");
         team_builder.addTeamMember(product_deduplication, marius);

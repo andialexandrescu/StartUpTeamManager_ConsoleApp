@@ -8,13 +8,11 @@ import java.util.Map;
 public class TimeLog
 {
     private TeamMember member;
-    private Task related_task;
     private Map<LocalDate, LocalTime> work_hours;
 
-    public TimeLog(TeamMember member, Task related_task)
+    public TimeLog(TeamMember member)
     {
         this.member = member;
-        this.related_task = related_task;
         this.work_hours = new HashMap<>();
     }
 
@@ -23,23 +21,9 @@ public class TimeLog
         return member;
     }
 
-    public Task getRelatedTask()
-    {
-        return related_task;
-    }
-
     public Map<LocalDate, LocalTime> getAllWorkHours()
     {
         return work_hours;
-    }
-
-    public void setWorkHours(LocalDate date, LocalTime hours)
-    {
-        if(hours.getHour() > 10)
-        {
-            throw new IllegalArgumentException("Cannot log more than 10 hours a day");
-        }
-        work_hours.put(date, hours);
     }
 
     public LocalTime getWorkHoursBasedOnDate(LocalDate date)
@@ -47,7 +31,7 @@ public class TimeLog
         return work_hours.get(date);
     }
 
-    public void addWorkHours(LocalDate date, LocalTime hours)
+    public void setWorkHours(LocalDate date, LocalTime hours)
     {
         // already logged hours for the given date, if not, set default to 0 hours
         LocalTime existing_hours = work_hours.containsKey(date) ? work_hours.get(date) : LocalTime.of(0, 0);
@@ -64,4 +48,10 @@ public class TimeLog
         work_hours.put(date, LocalTime.of(total_hours, total_minutes));
     }
 
+    @Override
+    public String toString()
+    {
+        return getClass().getSimpleName() + " object, with the following specifications: \n" +
+                "(member=" + member.getName() + ", work_hours=" + work_hours + ")";
+    }
 }

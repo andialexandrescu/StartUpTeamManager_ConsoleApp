@@ -1,8 +1,10 @@
 package startup.entities;
+import startup.entities.comparators.TechRequirementsComparator;
 import startup.entities.enums.TechStack;
 import startup.entities.pairs.SchedulePair;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Project
 {
@@ -13,25 +15,32 @@ public class Project
     private TeamManager manager;
     private Map<TechStack, Integer> tech_requirements; // represents the number of team members required for that particular tech stack in the project
     private SchedulePair deadline; // deadline contains both start_date and end_date details for a project
+    private List<Task> tasks; // one-to-many relationship with Task
+    private List<Feedback> feedback_list;
 
     public Project(String title, TeamManager team_manager, SchedulePair deadline)
     {
+        validateTitle(title); // logic that doesn't change after the object was created
         this.title = title;
         no_projects++;
         this.manager = team_manager;
-        addDeadline(deadline);
+        this.setDeadline(deadline);
         auxHelper();
     }
-    public Project(String title, TeamManager team_manager, SchedulePair deadline, Set<TeamMember> members, HashMap<TechStack, Integer> tech_requirements)
+    public Project(String title, TeamManager team_manager, SchedulePair deadline, Set<TeamMember> members, HashMap<TechStack, Integer> tech_requirements, List<Task> tasks, List<Feedback> feedback_list)
     {
         this(title, team_manager, deadline);
         this.members = new HashSet<>(members); // deep copy
         this.tech_requirements = new HashMap<>(tech_requirements);
+        this.tasks = new ArrayList<>(tasks);
+        this.feedback_list = new ArrayList<>(feedback_list);
     }
     private void auxHelper() // internal logic for constructors
     {
         this.members = new HashSet<>();
         this.tech_requirements = new HashMap<>();
+        this.tasks = new ArrayList<>();
+        this.feedback_list = new ArrayList<>();
     }
 
     public String getTitle()
@@ -69,19 +78,70 @@ public class Project
         return tech_requirements;
     }
 
-    public SchedulePair getDeadline()
+    public void setDeadline(SchedulePair deadline)
     {
-        return deadline;
-    }
+        if(deadline == null)
+        {
+            throw new IllegalArgumentException("Deadline cannot be null");
+        }
 
-    public void addDeadline(SchedulePair deadline)
-    {
         if(deadline.getStartDate().isBefore(deadline.getEndDate()))
         {
             this.deadline = deadline;
         } else
         {
             throw new IllegalArgumentException("Start date must be before end date");
+        }
+    }
+
+    public SchedulePair getDeadline()
+    {
+        return deadline;
+    }
+
+    public List<Task> getTasks()
+    {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks)
+    {
+        if(tasks == null)
+        {
+            throw new IllegalArgumentException("Tasks list cannot be null");
+        }
+        this.tasks = new ArrayList<>(tasks);
+    }
+
+    public List<Feedback> getFeedbackList()
+    {
+        return feedback_list;
+    }
+
+    private void validateTitle(String title)
+    {
+        if(title == null || title.trim().isEmpty()) // null or empty spaces followed by no characters
+        {
+            throw new IllegalArgumentException("Project title cannot be null or empty");
+        }
+        if(title.length() <= 5)
+        {
+            throw new IllegalArgumentException("Project title must be more than 5 characters");
+        }
+        String[] words = title.trim().split("\\s+"); // just like in Python, split by any type of whitespace
+        if(words.length > 3)
+        {
+            throw new IllegalArgumentException("Project title must contain at most 3 words, otherwise it will be too long");
+        }
+
+        Set<String> not_allowed = Set.of("project", "application", "app", "solutions", "software", "web", "mobile", "tool", "platform");
+        String aux_title = title.toLowerCase();
+        for(String keyword : not_allowed)
+        {
+            if(aux_title.contains(keyword))
+            {
+                throw new IllegalArgumentException("Project title cannot contain keyword: " + keyword + " since it has to be an unique name");
+            }
         }
     }
 
@@ -117,22 +177,23 @@ public class Project
         }
     }
 
-    public void addMember(TeamMember member)
-    {
-        if(!members.add(member))
-        {
-            throw new IllegalArgumentException("Member is already part of the project");
-        }
-    }
+    // these methods should only be used by the service layer
+//    public void addMember(TeamMember member)
+//    {
+//        if(!members.add(member))
+//        {
+//            throw new IllegalArgumentException("Member is already part of the project");
+//        }
+//    }
 
-    public void removeMember(TeamMember member)
-    {
-        if(members == null || !members.contains(member))
-        {
-            throw new IllegalArgumentException("Member is not part of the project");
-        }
-        members.remove(member);
-    }
+//    public void removeMember(TeamMember member)
+//    {
+//        if(members == null || !members.contains(member))
+//        {
+//            throw new IllegalArgumentException("Member is not part of the project");
+//        }
+//        members.remove(member);
+//    }
 
     public void addTechRequirement(TechStack techStack, int count)
     {
@@ -157,6 +218,20 @@ public class Project
         return k;
     }
 
+    public void sortTechRequirements()
+    {
+        List<Map.Entry<TechStack, Integer>> list = new ArrayList<>(tech_requirements.entrySet()); // entrySet() returns a Set containing all the entries (key-value pairs) from the map, which is then converted into a List
+        list.sort(new TechRequirementsComparator()); // sorting the list using a custom comparator
+
+        Map<TechStack, Integer> sorted_map = new LinkedHashMap<>(); // unlike HashMap, LinkedHashMap maintains the order in which entries were inserted, because the entries are sorted in a specific order (by value and then by key), that order needs to be part of the final map
+        for(Map.Entry<TechStack, Integer> entry : list)
+        {
+            sorted_map.put(entry.getKey(), entry.getValue());
+        }
+
+        this.tech_requirements = sorted_map;
+    }
+
     public void display()
     {
         System.out.println();
@@ -170,16 +245,27 @@ public class Project
             System.out.println("\t\t" + entry.getKey() + ": " + entry.getValue() + " required");
         }
         System.out.println("\tTeam Members:");
-        for (TeamMember member : members)
+        for(TeamMember member : members)
         {
             System.out.println("\t\t" + member.getName() + " (" + member.getEmail() + ")");
         }
+        System.out.println("\tTasks:");
+        for(Task tsk : tasks)
+        {
+            System.out.println("\t\t" + tsk.getTitle() + " (" + tsk.getDescription() + ")");
+        }
+        System.out.println("\tFeedback:");
+        for(Feedback feedback : feedback_list)
+        {
+            System.out.println("\t\t" + feedback.getStage() + " (" + feedback.getCriteriaScores() + ")");
+        }
+
     }
 
     @Override
     public String toString()
     {
         return getClass().getSimpleName() + " object, with the following specifications: \n" +
-                "(title=" + title + "\nmembers=" + members + "\nmanager=" + manager + "\ntech_requirements=" + tech_requirements + ", deadline" + deadline + ")";
+                "(title=" + title + "\nmembers=" + members + "\nmanager=" + manager + "\ntech_requirements=" + tech_requirements + ", deadline" + deadline + "\ntasks" + tasks + "\nfeedback_list=" + feedback_list + ")";
     }
 }

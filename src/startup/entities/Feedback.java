@@ -6,34 +6,21 @@ import java.util.Objects;
 
 public class Feedback
 {
-    private Project project; // the Project needed to be evaluated
     private ProjectStage stage;
     private Map<String, Double> criteria_scores; // criteria and the respective score
     private Boolean approve_stage; // whether the Project at the given stage is progressing as expected (true) or not (false)
 
-    public Feedback(Project project, ProjectStage stage)
+    public Feedback(ProjectStage stage)
     {
-        this.project = project;
         this.stage = stage;
         this.criteria_scores = new HashMap<>();
         this.approve_stage = false;
     }
-    public Feedback(Project project, ProjectStage stage, Map<String, Double> criteria_scores, Boolean approve_stage)
+    public Feedback(ProjectStage stage, Map<String, Double> criteria_scores, Boolean approve_stage)
     {
-        this.project = project;
         this.stage = stage;
         this.criteria_scores = new HashMap<>(criteria_scores);
         this.approve_stage = approve_stage;
-    }
-
-    public Project getProject()
-    {
-        return project;
-    }
-
-    public void setProject(Project project)
-    {
-        this.project = project;
     }
 
     public ProjectStage getStage()
@@ -46,21 +33,17 @@ public class Feedback
         this.stage = stage;
     }
 
-    public void setApproveStageChoice(String choice)
+    public Map<String, Double> getCriteriaScores()
     {
-        if(Objects.equals("yes", choice != null ? choice.toLowerCase() : null))
-        {
-            this.approve_stage = true;
-        } else if(Objects.equals("no", choice != null ? choice.toLowerCase() : null))
-        {
-            this.approve_stage = false;
-        } else
-        {
-            throw new IllegalArgumentException("Choice must be 'yes' or 'no'");
-        }
+        return criteria_scores;
     }
 
-    public void addScore(String criteria, double score)
+    public void setApproveStageChoice(Boolean choice)
+    {
+        this.approve_stage = choice;
+    }
+
+    public void setCriteriaScores(String criteria, double score)
     {
         if(score < 0 || score > 10)
         {
@@ -83,11 +66,20 @@ public class Feedback
         return total / criteria_scores.size();
     }
 
+    public boolean isPositive()
+    {
+        if(Boolean.TRUE.equals(approve_stage))
+        {
+            double averageScore = computeAverageScore(); // average score, check if it meets the threshold
+            return averageScore >= 7.0;
+        }
+        return false; // stage unapproved
+    }
+
     public void display()
     {
         System.out.println("Defined in the management system as a " + this);
         System.out.println("Evaluation Report:");
-        System.out.println("Project Title: " + project.getTitle());
         System.out.println("Stage: "+ getStage());
         System.out.println("Criteria Scores:");
         for(Map.Entry<String, Double> entry : criteria_scores.entrySet())
@@ -102,7 +94,7 @@ public class Feedback
     public String toString()
     {
         return getClass().getSimpleName() + " object, with the following specifications: \n" +
-                "(project=" + project.getTitle() + ", stage=" + stage + ", criteria_scores=" + criteria_scores + ", approve_stage=" + approve_stage + ")";
+                "(stage=" + stage + ", criteria_scores=" + criteria_scores + ", approve_stage=" + approve_stage + ")";
     }
 
 }
