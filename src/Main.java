@@ -54,7 +54,7 @@ public class Main
             System.out.println("15. DeliverProject - Add TimeLog to Task");
             System.out.println("16. DeliverProject - Add Feedback to Project");
             System.out.println("17. DeliverProject - Display Tasks with Exceeded Completion Time");
-            System.out.println("14. DeliverProject - Deliver Project");
+            System.out.println("18. DeliverProject - Deliver Project");
             System.out.println("0. Exit");
 
             System.out.print("Enter your choice: ");
@@ -87,7 +87,70 @@ public class Main
                     scanner.nextLine();
 
                     TeamManager manager = new TeamManager(manager_name, manager_email, manager_salary, date);
+
+                    System.out.print("How many tech knowledge items do you want to add? ");
+                    int tech_count = scanner.nextInt();
+                    scanner.nextLine();
+
+                    for(int i = 0; i < tech_count; i++)
+                    {
+                        System.out.print("Enter tech knowledge item " + (i+1) + " (example Python, Java, ...): ");
+                        String tech_knowledge = scanner.nextLine();
+                        try
+                        {
+                            TechStack tech_stack = TechStack.valueOf(tech_knowledge);
+                            manager.addTechKnowledge(tech_stack);
+                        } catch (IllegalArgumentException e)
+                        {
+                            System.out.println("Invalid tech knowledge, use one of the predefined values");
+                            i--; // retry iteration
+                        }
+                    }
+
+                    System.out.print("How many roles do you want to add? ");
+                    int role_count = scanner.nextInt();
+                    scanner.nextLine();
+
+                    for(int i = 0; i < role_count; i++)
+                    {
+                        System.out.print("Enter role " + (i+1) + " (example MLEngineer, FullStack, ...): ");
+                        String r = scanner.nextLine();
+                        try
+                        {
+                            Role role = Role.valueOf(r);
+                            manager.addRole(role);
+                        } catch (IllegalArgumentException e)
+                        {
+                            System.out.println("Invalid role, use one of the predefined values");
+                            i--;
+                        }
+                    }
+
                     Project project = new Project(project_title, manager, new SchedulePair(LocalDate.now(), LocalDate.now().plusMonths(6)));
+
+                    System.out.print("How many tech requirements do you want to add for the project? ");
+                    int requirement_count = scanner.nextInt();
+                    scanner.nextLine();
+
+                    for(int i = 0; i < requirement_count; i++)
+                    {
+                        System.out.print("Enter tech requirement " + (i+1) + " for the project (example Python, Cassandra, ...): ");
+                        String requirement_input = scanner.nextLine();
+                        try
+                        {
+                            TechStack requirement = TechStack.valueOf(requirement_input);
+                            System.out.print("Enter the number of people required for " + requirement_input + ": ");
+                            int people_count = scanner.nextInt();
+                            scanner.nextLine();
+
+                            project.addTechRequirement(requirement, people_count);
+                        } catch (IllegalArgumentException e)
+                        {
+                            System.out.println("Invalid tech requirement, use one of the predefined values");
+                            i--;
+                        }
+                    }
+
                     projects.add(project);
                     System.out.println(project);
                     break;
@@ -113,6 +176,45 @@ public class Main
                     }
 
                     TeamMember member = new TeamMember(member_name, member_email, member_salary, date1);
+
+                    System.out.print("How many tech knowledge items do you want to add? ");
+                    int tech_count1 = scanner.nextInt();
+                    scanner.nextLine();
+
+                    for(int i = 0; i < tech_count1; i++)
+                    {
+                        System.out.print("Enter tech knowledge item " + (i+1) + " (example Python, Java, ...): ");
+                        String tech_knowledge = scanner.nextLine();
+                        try
+                        {
+                            TechStack tech_stack = TechStack.valueOf(tech_knowledge);
+                            member.addTechKnowledge(tech_stack);
+                        } catch (IllegalArgumentException e)
+                        {
+                            System.out.println("Invalid tech knowledge, use one of the predefined values");
+                            i--; // retry iteration
+                        }
+                    }
+
+                    System.out.print("How many roles do you want to add? ");
+                    int role_count1 = scanner.nextInt();
+                    scanner.nextLine();
+
+                    for(int i = 0; i < role_count1; i++)
+                    {
+                        System.out.print("Enter role " + (i+1) + " (example MLEngineer, FullStack, ...): ");
+                        String r = scanner.nextLine();
+                        try
+                        {
+                            Role role = Role.valueOf(r);
+                            member.addRole(role);
+                        } catch (IllegalArgumentException e)
+                        {
+                            System.out.println("Invalid role, use one of the predefined values");
+                            i--;
+                        }
+                    }
+
                     members.add(member);
                     System.out.println(member);
                     break;
@@ -511,6 +613,44 @@ public class Main
                             if(!timelogs.containsKey(selected_member))
                             {
                                 TimeLog timelog = new TimeLog(selected_member);
+
+                                System.out.print("How many work hours entries do you want to add? ");
+                                int entries_count = scanner.nextInt();
+                                scanner.nextLine();
+
+                                for(int i = 0; i < entries_count; i++)
+                                {
+                                    System.out.print("Enter date for work hours entry " + (i+1) + " (YYYY-MM-DD): ");
+                                    String date_input3 = scanner.nextLine();
+                                    LocalDate date3;
+                                    try
+                                    {
+                                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d");
+                                        date3 = LocalDate.parse(date_input3, formatter);
+                                    } catch (DateTimeParseException e)
+                                    {
+                                        System.out.println("Invalid date format, use YYYY-MM-DD (example 2025-05-12)");
+                                        i--;
+                                        continue;
+                                    }
+
+                                    System.out.print("Enter work hours for " + date_input3 + " (HH:mm): ");
+                                    String time_input = scanner.nextLine();
+                                    LocalTime time;
+                                    try
+                                    {
+                                        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+                                        time = LocalTime.parse(time_input, timeFormatter);
+                                    } catch (DateTimeParseException e)
+                                    {
+                                        System.out.println("Invalid time format, use HH:mm (example 08:00)");
+                                        i--;
+                                        continue;
+                                    }
+
+                                    timelog.setWorkHours(date3, time);
+                                }
+
                                 timelogs.put(selected_member, timelog);
                                 System.out.println(timelog);
                             } else
@@ -616,9 +756,24 @@ public class Main
                                     TeamMember selected_member = assigned_members_list.get(timelog_member_index);
 
                                     TimeLog selected_timelog = timelogs.get(selected_member);
+
+                                    System.out.print("Enter time log date (YYYY-MM-DD): ");
+                                    String string_date1 = scanner.next();
+                                    LocalDate date2;
                                     try
                                     {
-                                        deliver_project.addTimeLogToTask(selected_project, selected_task, selected_timelog, LocalDate.now());
+                                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d");
+                                        date2 = LocalDate.parse(string_date1, formatter);
+                                    } catch (DateTimeParseException e)
+                                    {
+                                        System.out.println("Invalid date format, use YYYY-MM-DD (example 2025-05-12)");
+                                        break;
+                                    }
+                                    scanner.nextLine();
+
+                                    try
+                                    {
+                                        deliver_project.addTimeLogToTask(selected_project, selected_task, selected_timelog, date2);
                                     } catch (IllegalArgumentException e)
                                     {
                                         System.out.println("Error: " + e.getMessage());
